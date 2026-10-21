@@ -448,7 +448,13 @@ data class NavigationBarConfig(
             val file = java.io.File(path)
             if (file.extension.equals("svg", ignoreCase = true)) {
                 val targetSize = (context.resources.displayMetrics.density * 48).toInt()
-                return SvgUtils.createBitmapFromFile(path, targetSize, targetSize)
+                // SVG 走 File.readBytes() 直接读盘，文件失效时会抛异常：
+                // 自定义底栏配置存的是图标绝对路径，恢复备份/换包名/换设备后路径可能
+                // 指向不存在或其他应用的 Android/data 目录（Android 11+ 存储隔离下
+                // 读不到，报 EACCES）。这里与位图分支保持一致：读失败只当没有自定义
+                // 图标，回退默认图标，不能让底栏刷新崩掉主界面
+                return runCatching { SvgUtils.createBitmapFromFile(path, targetSize, targetSize) }
+                    .getOrNull()
                     ?.let { drawableOf(cacheKey, it) }
             }
             val bitmap = synchronized(iconBitmapCache) {
