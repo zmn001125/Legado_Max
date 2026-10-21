@@ -1,6 +1,7 @@
 name: Unit Test
 
 on:
+  workflow_dispatch:
   # 与 Build Debug APK 一致：推送到 test 分支，或提交 PR 到 test 分支时触发
   # （testing.md §16.4：JVM 单测进 PR CI，红 = 不合，禁止降级为 warning）
   push:
